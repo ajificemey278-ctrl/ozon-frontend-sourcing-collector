@@ -48,3 +48,35 @@ def test_parse_search_page_adds_card_candidates():
     assert len(result.items) >= 2
     assert result.items[1].product_id == "675208194190"
     assert result.items[1].price_value == 22.0
+
+def test_parse_taobao_visible_text_supplier_fields():
+    text = """太阳能露营灯 USB充电 户外帐篷灯
+¥39.90
+月销 1000+
+包邮
+杭州户外用品店
+"""
+    result = parse_visible_text("taobao", "https://item.taobao.com/item.htm?id=123456", text)
+    assert result.status == "ok"
+    item = result.items[0]
+    assert item.currency == "CNY"
+    assert item.price_value == 39.90
+    assert item.sales_text.startswith("月销")
+    assert item.product_id == "123456"
+    assert item.attributes["usb"] == "USB"
+
+
+def test_parse_yiwugo_visible_text_supplier_fields():
+    text = """义乌购 LED露营灯 太阳能充电户外帐篷灯
+¥12.50
+起订量 2件
+店铺：义乌市某某电子商行
+48小时发货
+"""
+    result = parse_visible_text("yiwugo", "https://www.yiwugo.com/product/detail/987654.html", text)
+    assert result.status == "ok"
+    item = result.items[0]
+    assert item.currency == "CNY"
+    assert item.price_value == 12.5
+    assert item.product_id == "987654"
+    assert item.attributes["quantity"] == "2件"
