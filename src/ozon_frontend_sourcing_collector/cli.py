@@ -14,6 +14,8 @@ def dump_json(data: object) -> None:
 
 
 def read_text(path: str) -> str:
+    if path == "-":
+        return sys.stdin.read()
     return Path(path).read_text(encoding="utf-8")
 
 
