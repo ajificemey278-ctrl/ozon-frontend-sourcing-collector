@@ -14,7 +14,7 @@ PRICE_SYMBOL_BEFORE_RE = re.compile(r"(?P<symbol>[¥￥₽$])\s*(?P<value>\d+(?:
 PRICE_SYMBOL_AFTER_RE = re.compile(r"(?P<value>\d+(?:[\s.,]\d+)*)\s*(?P<symbol>[¥￥₽$])")
 RATING_RE = re.compile(r"(?:рейтинг|rating|评分|星级)[:：\s]*([0-5](?:[.,]\d)?)", re.I)
 REVIEWS_RE = re.compile(r"(\d+[\d\s.,]*\s*(?:отзыв\w*|reviews?|评价|好评))", re.I)
-SALES_RE = re.compile(r"(已售\s*\d+[\d\s.,万+]*|\d+[\d\s.,万+]*\s*(?:件|pcs|шт)\s*(?:已售|sold)?)", re.I)
+SALES_RE = re.compile(r"(已售\s*\d+[\d\s.,万+]*|月销\s*\d+[\d\s.,万+]*|销量\s*\d+[\d\s.,万+]*|\d+[\d\s.,万+]*\s*(?:人付款|付款|件|pcs|шт)\s*(?:已售|sold)?)", re.I)
 DELIVERY_RE = re.compile(
     r"(завтра|сегодня|\d{1,2}\s+[а-яё]+|достав\w+[^\n]{0,40}|包邮|运费[^\n]{0,20}|发货[^\n]{0,20})",
     re.I,
@@ -24,6 +24,7 @@ PRODUCT_ID_PATTERNS = (
     re.compile(r"offer/(\d+)\.html", re.I),
     re.compile(r"id=(\d+)", re.I),
     re.compile(r"item/(\d+)\.html", re.I),
+    re.compile(r"/(?:product|goods)/(?:detail/)?(\d+)\.html", re.I),
 )
 
 
