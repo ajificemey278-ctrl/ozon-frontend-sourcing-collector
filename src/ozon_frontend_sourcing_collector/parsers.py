@@ -10,7 +10,8 @@ from bs4 import BeautifulSoup
 from .models import CollectionResult, Evidence, ProductItem
 from .safety import SafetyGate
 
-PRICE_RE = re.compile(r"(?P<symbol>[¥￥₽$])\s*(?P<value>\d[\d\s.,]*)")
+PRICE_SYMBOL_BEFORE_RE = re.compile(r"(?P<symbol>[¥￥₽$])\s*(?P<value>\d+(?:[\s.,]\d+)*)")
+PRICE_SYMBOL_AFTER_RE = re.compile(r"(?P<value>\d+(?:[\s.,]\d+)*)\s*(?P<symbol>[¥￥₽$])")
 RATING_RE = re.compile(r"(?:рейтинг|rating|评分|星级)[:：\s]*([0-5](?:[.,]\d)?)", re.I)
 REVIEWS_RE = re.compile(r"(\d+[\d\s.,]*\s*(?:отзыв\w*|reviews?|评价|好评))", re.I)
 SALES_RE = re.compile(r"(已售\s*\d+[\d\s.,万+]*|\d+[\d\s.,万+]*\s*(?:件|pcs|шт)\s*(?:已售|sold)?)", re.I)
@@ -42,17 +43,28 @@ def detect_currency(price_text: str | None) -> str | None:
     return None
 
 
-def parse_price(text: str) -> tuple[str | None, str | None, float | None]:
-    match = PRICE_RE.search(text)
-    if not match:
-        return None, None, None
-    price_text = clean_text(match.group(0))
-    value_text = match.group("value").replace(" ", "").replace(",", ".")
+def _normalise_number(value_text: str) -> float | None:
+    value_text = value_text.replace(" ", "").replace(",", ".")
     try:
-        value = float(value_text)
+        return float(value_text)
     except ValueError:
-        value = None
-    return price_text, detect_currency(price_text), value
+        return None
+
+
+def parse_price(text: str) -> tuple[str | None, str | None, float | None]:
+    candidates = []
+    for pattern in (PRICE_SYMBOL_AFTER_RE, PRICE_SYMBOL_BEFORE_RE):
+        for match in pattern.finditer(text):
+            value = _normalise_number(match.group("value"))
+            if value is None:
+                continue
+            price_text = clean_text(match.group(0))
+            candidates.append((price_text, detect_currency(price_text), value, match.start()))
+    if not candidates:
+        return None, None, None
+    candidates.sort(key=lambda item: item[3])
+    price_text, currency, value, _ = candidates[0]
+    return price_text, currency, value
 
 
 def extract_product_id(url: str | None) -> str | None:
