@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ozon Frontend Sourcing Collection Result",
+  "type": "object",
+  "required": ["platform", "status", "collected_at", "items", "blocked_reasons", "warnings", "evidence"],
+  "properties": {
+    "platform": { "type": "string", "enum": ["ozon", "1688", "taobao", "yiwugo"] },
+    "source_url": { "type": ["string", "null"] },
+    "status": { "type": "string", "enum": ["ok", "verification_required", "network_error"] },
+    "collected_at": { "type": "string" },
+    "page_type": { "type": ["string", "null"] },
+    "blocked_reasons": { "type": "array", "items": { "type": "string" } },
+    "warnings": { "type": "array", "items": { "type": "string" } },
+    "evidence": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidence" }
+    },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/productItem" }
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": ["kind", "text", "confidence"],
+      "properties": {
+        "kind": { "type": "string" },
+        "text": { "type": "string" },
+        "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+        "source": { "type": ["string", "null"] }
+      }
+    },
+    "productItem": {
+      "type": "object",
+      "properties": {
+        "title": { "type": ["string", "null"] },
+        "price_text": { "type": ["string", "null"] },
+        "currency": { "type": ["string", "null"] },
+        "price_value": { "type": ["number", "null"] },
+        "rating": { "type": ["string", "null"] },
+        "reviews_text": { "type": ["string", "null"] },
+        "sales_text": { "type": ["string", "null"] },
+        "delivery_text": { "type": ["string", "null"] },
+        "shop_name": { "type": ["string", "null"] },
+        "product_id": { "type": ["string", "null"] },
+        "product_url": { "type": ["string", "null"] },
+        "image_urls": { "type": "array", "items": { "type": "string" } },
+        "attributes": { "type": "object" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
