@@ -215,19 +215,17 @@ def parse_html_snapshot(platform: str, source_url: str | None, html: str) -> Col
     if description:
         item.evidence.append(Evidence(kind="meta_description", text=description[:1000], confidence="medium"))
 
-    links = []
+    link_items: list[ProductItem] = []
+    seen_hrefs: set[str] = set()
     for anchor in soup.find_all("a", href=True):
         text = clean_text(anchor.get_text(" ", strip=True))
         href = urljoin(source_url or "", anchor["href"])
-        if len(text) >= 8 and urlparse(href).netloc:
-            links.append((text, href))
-        if len(links) >= 20:
-            break
-
-    if links and (not item.title or len(full_text) > 5000):
-        for text, href in links[:10]:
-            price_text, currency, price_value = parse_price(text)
-            item_candidate = ProductItem(
+        if len(text) < 8 or not urlparse(href).netloc or href in seen_hrefs:
+            continue
+        seen_hrefs.add(href)
+        price_text, currency, price_value = parse_price(text)
+        link_items.append(
+            ProductItem(
                 title=text[:220],
                 price_text=price_text,
                 currency=currency,
@@ -237,14 +235,19 @@ def parse_html_snapshot(platform: str, source_url: str | None, html: str) -> Col
                 attributes=extract_attribute_hints(text),
                 evidence=[Evidence(kind="search_card_link", text=text[:500], confidence="low")],
             )
-            if item_candidate.title != item.title:
-                item.warnings.append("page may be a search/results page; card extraction is approximate")
-                break
+        )
+        if len(link_items) >= 20:
+            break
+
+    items = [item]
+    if link_items and len(full_text) > 1500:
+        item.warnings.append("page may be a search/results page; card extraction is approximate")
+        items.extend(link_items[:10])
 
     return CollectionResult(
         platform=platform,
         source_url=source_url,
         status="ok",
         page_type="html_snapshot",
-        items=[item],
+        items=items,
     )
